@@ -79,21 +79,24 @@ func KillForServer(server config.Server) {
 // Kill sends a quite command to a screen with the given name
 // screen -r %name% -X quit
 func Kill(name string) {
-	if IsRunning(name) {
-		cmd := exec.Command("screen", "-S", fmt.Sprintf("%s", name), "-X", "quit")
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		err := cmd.Run()
-		if err != nil {
-			log.Fatalf("could not kill the screen \"%s\": %v — %v", name, err, stderr.String())
-		}
-
-		ticker := time.NewTicker(10 * time.Millisecond)
-		defer ticker.Stop()
-		for range ticker.C {
-			if !IsRunning(name) {
-				break
-			}
-		}
+	if !IsRunning(name) {
+		return
 	}
+	cmd := exec.Command("screen", "-S", name, "-X", "quit")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		log.Printf("could not kill screen %q: %v — %v", name, err, stderr.String())
+		return
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if !IsRunning(name) {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	log.Printf("screen %q did not exit within timeout, sending SIGKILL", name)
+	// fallback: parse pid from `screen -ls` and kill -9
+	_ = exec.Command("pkill", "-9", "-f", fmt.Sprintf("screen.*%s", name)).Run()
 }

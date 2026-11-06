@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/keyCat/srcds-manager/config"
 	"github.com/spf13/cobra"
 	"log"
 )
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "servers",
 	Short: "Manage srcds servers",
@@ -16,13 +16,11 @@ var rootCmd = &cobra.Command{
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
-	Long: `This command helps to manage the state of multiple running servers by facilitating tasks of starting, restarting and updating servers.
+	Long: fmt.Sprintf(`This command helps to manage the state of multiple running servers by facilitating tasks of starting, restarting and updating servers.
 
-Version: 1.1.1  Author: 0x0c  Discord: @choree`,
+Version: %s  Author: 0x0c  Discord: @choree`, Version),
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
